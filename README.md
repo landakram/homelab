@@ -1,23 +1,30 @@
 # Homelab
 
+## Notes
+
+* Remote user is assumed to be `mark`
+* Remote sudo password is retrieved from keychain on ansible controller
+
 ## Provisioning a new machine
 
 1. Install ubuntu server edition on the new machine
 2. Enable [SSH password authentication](https://serverpilot.io/docs/how-to-enable-ssh-password-authentication/)
+3. Note the IP address of the new host. This can be done with `nmap` if necessary. 
+4. Add the new host's IP address to a group in `inventory/homelab/hosts.ini`. Note that this file is not checked into version control.
 
-Install ansible dependencies:
+5. Install ansible dependencies:
 
 ```sh
 ansible-galaxy install -r requirements.yml
 ```
 
-Bootstrap the node:
+6. Bootstrap the node. Note that this will add an SSH key and disable SSH password authentication, making `-s` unnecessary in all subsequent calls:
 
 ```sh
 ansible-playbook bootstrap.yml -i inventory/homelab/hosts.ini -e @credentials -s
 ```
 
-Install k3s and applications:
+7. Install k3s and applications:
 
 ```sh
 ansible-playbook site.yml -i inventory/homelab/hosts.ini -e @credentials
