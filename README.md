@@ -1,5 +1,7 @@
 # Homelab
 
+A homelab running Kubernetes with [k3s](k3s.io/). Automated provisioning with [Ansible](https://www.ansible.com/).
+
 ## Notes
 
 * Remote user is assumed to be `mark`
@@ -39,3 +41,8 @@ So to create a cluster from scratch:
 1. Clone this repository
 2. Copy the `inventory/sample` directory from [k3s-io/k3s-ansible](https://github.com/k3s-io/k3s-ansible/tree/master/inventory/sample) as `inventory/homelab` in this repo.
 3. Follow the instructions from [Provisioning a new machine](#provisioning-a-new-machine).
+4. After setting up the k8s master, you might want to copy over its kube config so that you can use `kubectl` from the ansible controller:
+
+```
+scp mark@<master-ip>:~/.kube/config ~/.kube/config
+```

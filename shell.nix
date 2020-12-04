@@ -4,8 +4,11 @@ let
 in
 with pkgs; stdenv.mkDerivation {
   name = "shell";
-  buildInputs = with python37Packages; [
-    keyring
+  buildInputs = [
+    ansible
+    sshpass
+    kubectl
+    python37Packages.keyring
   ];
 }
 
