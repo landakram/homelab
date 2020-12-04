@@ -25,13 +25,7 @@ ansible-galaxy install -r requirements.yml
 6. Bootstrap the node. Note that this will add an SSH key and disable SSH password authentication, making `-s` unnecessary in all subsequent calls:
 
 ```sh
-ansible-playbook bootstrap.yml -i inventory/homelab/hosts.ini -e @credentials -s
-```
-
-7. Install k3s and applications:
-
-```sh
-ansible-playbook site.yml -i inventory/homelab/hosts.ini -e @credentials
+ansible-playbook site.yml -i inventory/homelab/hosts.ini -e @credentials -s
 ```
 
 ## Building a homelab from scratch

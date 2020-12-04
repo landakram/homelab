@@ -4,9 +4,17 @@
   gather_facts: yes
   become: yes
   roles:
+    - role: bootstrap
+      tags: ['bootstrap']
+
     - role: prereq
+      tags: ['k3s']
+
     - role: download
+      tags: ['k3s']
+
     - role: raspberrypi
+      tags: ['k3s']
 
 - hosts: master
   become: yes
@@ -15,17 +23,19 @@
     PATH: "~/go/bin:{{ ansible_env.PATH }}"
   roles:
     - role: k3s/master
+      tags: ['k3s']
 
     - role: setup
-      tags: ['setup']
+      tags: ['apps', 'setup']
 
     - role: monitoring
-      tags: ['monitoring']
+      tags: ['apps', 'monitoring']
 
     - role: dokuwiki
-      tags: ['dokuwiki']
+      tags: ['apps', 'dokuwiki']
 
 - hosts: node
   become: yes
   roles:
     - role: k3s/node
+      tags: ['k3s']
