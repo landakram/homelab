@@ -1,0 +1,58 @@
+---
+ - name: "Harden SSH"
+   include_role:
+     name: vitalk.secure-ssh
+     apply:
+       become: yes
+   vars:
+     ssh_user: "{{ ansible_user }}"
+     ssh_identity_key: "{{ lookup('env','HOME') + '/.ssh/id_ed25519.pub' }}"
+
+ - name: "Update apt cache"
+   become: yes
+   apt: 
+     update_cache: yes
+     cache_valid_time: 3600
+
+ - name: "Upgrade apt packages"
+   become: yes
+   apt:
+     upgrade: safe
+
+ - name: "Install required packages"
+   become: yes
+   package:
+     name:
+       - unattended-upgrades
+     state: present
+
+ - name: Adjust APT update intervals
+   become: yes
+   copy:
+     src: files/apt_periodic
+     dest: /etc/apt/apt.conf.d/10periodic
+
+ # TODO: I should probably parameterize the device name, as well as the volume group (ubuntu-vg),
+ # logical volume (ubuntu-lv) and existing partition (/dev/sda3), which are created by the
+ # ubuntu-server installer.
+ - name: Partition external SSD
+   become: yes
+   community.general.parted:
+     device: /dev/sdb
+     number: 1
+     flags: [ lvm ]
+     state: present
+
+ - name: Ensure new partition is in ubuntu-server's LVM volume group
+   become: yes
+   community.general.lvg:
+     vg: ubuntu-vg
+     pvs: /dev/sda3,/dev/sdb1
+
+ - name: Extend the logical volume to take all remaining space of the PVs and resize the underlying filesystem
+   become: yes
+   community.general.lvol:
+     vg: ubuntu-vg
+     lv: ubuntu-lv
+     size: 100%PVS
+     resizefs: true

@@ -1,0 +1,17 @@
+---
+- name: "Install required packages"
+  become: yes
+  package:
+    name: 
+      - python3-pip
+      - python3-setuptools
+      - build-essential
+      - golang
+      - git
+    state: present
+
+- name: Install openshift Python library
+  pip:
+    name: openshift
+    state: present
+  become: yes

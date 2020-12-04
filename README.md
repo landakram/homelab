@@ -1,3 +1,32 @@
+# Homelab
+
+## Provisioning a new machine
+
+1. Install ubuntu server edition on the new machine
+2. Enable [SSH password authentication](https://serverpilot.io/docs/how-to-enable-ssh-password-authentication/)
+
+Install ansible dependencies:
+
+```sh
+ansible-galaxy install -r requirements.yml
+```
+
+Bootstrap the node:
+
+```sh
+ansible-playbook bootstrap.yml -i inventory/homelab/hosts.ini -e @credentials -s
+```
+
+Install k3s and applications:
+
+```sh
+ansible-playbook site.yml -i inventory/homelab/hosts.ini -e @credentials
+```
+
+---
+
+README from template:
+
 # Build a Kubernetes cluster using k3s via Ansible
 
 Author: <https://github.com/itwars>

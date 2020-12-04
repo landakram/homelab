@@ -1,0 +1,74 @@
+---
+- name: Check if cluster-monitoring repo already exists.
+  stat:
+    path: /tmp/cluster-monitoring/vars.jsonnet
+  delegate_to: localhost
+  become: false
+  register: vars_file_exists
+
+- name: Retrieve and template cluster-monitoring manifests.
+  block:
+    - name: Clone the cluster-monitoring project.
+      git:
+        repo: https://github.com/carlosedp/cluster-monitoring.git
+        dest: /tmp/cluster-monitoring
+        version: "{{ cluster_monitoring_version }}"
+        force: yes
+
+    - name: Place our templated vars.jsonnet file.
+      template:
+        src: vars.jsonnet.j2
+        dest: /tmp/cluster-monitoring/vars.jsonnet
+
+    - name: Run 'vendor' cluster-monitoring target.
+      make:
+        chdir: /tmp/cluster-monitoring
+        target: vendor
+
+    - name: Run 'make' to generate all the K8s manifests.
+      make:
+        chdir: /tmp/cluster-monitoring
+
+  when: >
+    not vars_file_exists.stat.exists
+    or cluster_monitoring_update_repo | bool
+  delegate_to: localhost
+  become: false
+
+- name: Find all the manifests in the manifests/setup directory.
+  find:
+    paths: /tmp/cluster-monitoring/manifests/setup
+    file_type: file
+    patterns: '*.yaml,*.yml'
+  delegate_to: localhost
+  become: false
+  register: cluster_monitoring_setup_files
+
+- name: Echo monitoring files
+  debug:
+    msg: "{{ cluster_monitoring_setup_files.files | sort(attribute='path') | map(attribute='path') | list }}"
+
+- name: Apply cluster-monitoring setup manifests.
+  k8s:
+    definition: "{{ lookup('file', item) | from_yaml }}"
+    state: present
+  loop: "{{ cluster_monitoring_setup_files.files | sort(attribute='path') | map(attribute='path') | list }}"
+
+- name: Find all the manifests in the manifests directory.
+  find:
+    paths: /tmp/cluster-monitoring/manifests
+    file_type: file
+    patterns: '*.yaml,*.yml'
+  delegate_to: localhost
+  become: false
+  register: cluster_monitoring_files
+
+- name: Echo monitoring files
+  debug:
+    msg: "{{ cluster_monitoring_files.files | sort(attribute='path') | map(attribute='path') | list }}"
+
+- name: Apply cluster-monitoring manifests.
+  k8s:
+    definition: "{{ lookup('file', item) | from_yaml }}"
+    state: present
+  loop: "{{ cluster_monitoring_files.files | sort(attribute='path') | map(attribute='path') | list }}"

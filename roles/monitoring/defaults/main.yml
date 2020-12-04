@@ -1,0 +1,10 @@
+---
+# The version of the cluster-monitoring repo to check out. See commits:
+# https://github.com/carlosedp/cluster-monitoring/commits/master
+cluster_monitoring_version: bf9342e95c8211ebbda6b357ea0048d5283a1bf2
+
+# Whether to force updating the cluster-monitoring repository. Set this to true
+# if you change the cluster_monitoring_version above.
+cluster_monitoring_update_repo: true
+
+grafana_from_email: myemail@example.com

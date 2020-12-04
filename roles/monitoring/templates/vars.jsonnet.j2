@@ -1,0 +1,80 @@
+{
+  _config+:: {
+    namespace: 'monitoring',
+  },
+  modules: [
+    {
+      // After deployment, run the create_gmail_auth.sh script from scripts dir.
+      name: 'smtpRelay',
+      enabled: false,
+      file: import 'modules/smtp_relay.jsonnet',
+    },
+    {
+      name: 'armExporter',
+      enabled: false,
+      file: import 'modules/arm_exporter.jsonnet',
+    },
+    {
+      name: 'upsExporter',
+      enabled: false,
+      file: import 'modules/ups_exporter.jsonnet',
+    },
+    {
+      name: 'metallbExporter',
+      enabled: false,
+      file: import 'modules/metallb.jsonnet',
+    },
+    {
+      name: 'nginxExporter',
+      enabled: false,
+      file: import 'modules/nginx.jsonnet',
+    },
+    {
+      name: 'traefikExporter',
+      enabled: true,
+      file: import 'modules/traefik.jsonnet',
+    },
+    {
+      name: 'elasticExporter',
+      enabled: false,
+      file: import 'modules/elasticsearch_exporter.jsonnet',
+    },
+  ],
+
+  k3s: {
+    enabled: false,
+    master_ip: ['{{ master_ip }}'],
+  },
+
+  suffixDomain: '{{ ingress_server_ip }}.nip.io',
+  // If TLSingress is true, a self-signed HTTPS ingress with redirect will be created
+  TLSingress: false,
+  UseProvidedCerts: false,
+  TLSCertificate: importstr 'unused.crt',
+  TLSKey: importstr 'unused.key',
+
+  enablePersistence: {
+    prometheus: true,
+    grafana: true,
+    // If using a pre-created PV, fill in the names below. If blank, they will use the default StorageClass
+    prometheusPV: '',
+    grafanaPV: '',
+    // If required to use a specific storageClass, keep the PV names above blank and fill the storageClass name below.
+    storageClass: 'local-path',
+    prometheusSizePV: '2Gi',
+    grafanaSizePV: '20Gi',
+  },
+  prometheus: {
+    retention: '15d',
+    scrapeInterval: '30s',
+    scrapeTimeout: '30s',
+  },
+  grafana: {
+    from_address: '{{ grafana_from_email }}',
+    // Plugins to be installed at runtime.
+    //Ex. plugins: ['grafana-piechart-panel', 'grafana-clock-panel'],
+    plugins: [],
+    //Ex. env: [ { name: 'http_proxy', value: 'host:8080' } ]
+    env: []
+  },
+}

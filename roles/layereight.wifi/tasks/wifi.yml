@@ -1,0 +1,34 @@
+---
+
+  #
+  # install wpa_supplicant
+  #
+  - name: Install wpa_supplicant
+    become: yes
+    apt:
+      name: wpasupplicant
+      update_cache: yes
+      cache_valid_time: "{{ wifi_apt_cache_valid_time }}"
+
+  #
+  # configure wpa_supplicant
+  #
+  - name: Configure wpa_supplicant
+    become: yes
+    template:
+      src: wpa_supplicant.conf.j2
+      dest: /etc/wpa_supplicant/wpa_supplicant.conf
+      backup: yes
+    notify: Restart Networking
+
+  #
+  # dhcpcd interferes with normal interfaces config for wpa_supplicant
+  #
+  - name: Disable dhcpcd for {{ wifi_disable_dhcpcd_workaround_interface }}
+    blockinfile:
+      path: /etc/dhcpcd.conf
+      block: |
+        denyinterfaces {{ wifi_disable_dhcpcd_workaround_interface }}
+        nohook wpa_supplicant
+    notify: Restart dhcpcd
+    when: wifi_disable_dhcpcd_workaround

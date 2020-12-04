@@ -1,0 +1,39 @@
+---
+- name: Create dokuwiki namespace
+  k8s:
+    name: dokuwiki
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add bitnami chart repo
+  helm_repository:
+    name: bitnami
+    repo_url: https://charts.bitnami.com/bitnami
+
+- name: Deploy DokuWiki
+  helm:
+    name: dokuwiki
+    chart_ref: bitnami/dokuwiki
+    release_namespace: dokuwiki
+    state: present
+    values:
+      dokuwikiPassword: "{{ dokuwiki_password }}"
+      service:
+        type: ClusterIP
+      ingress:
+        enabled: true
+        hosts:
+          - name: "dokuwiki.{{ ingress_server_ip }}.nip.io"
+      # I'm not actually sure if I need to set this, but I'm doing it
+      # because I want to ensure that the pod's affinity is the same as
+      # the persistent volume (provisioned by local-path) that backs it.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - acepc

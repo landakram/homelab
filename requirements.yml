@@ -1,0 +1,13 @@
+---
+collections:
+  - name: ansible.posix
+  - name: community.general
+  - name: community.crypto
+  - name: community.kubernetes
+
+roles:
+  - name: layereight.wifi
+  - name: geerlingguy.helm
+  - name: vitalk.secure-ssh
+    src: https://github.com/vitalk/ansible-secure-ssh.git
+    version: d3f81ddda041e09e9bb0e0336c31ef2911860d7d

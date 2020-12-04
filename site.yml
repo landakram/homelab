@@ -10,8 +10,20 @@
 
 - hosts: master
   become: yes
+  environment:
+    K8S_AUTH_KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
   roles:
     - role: k3s/master
+
+    - role: setup
+      tags: ['setup']
+
+    - role: monitoring
+      tags: ['monitoring']
+
+    - role: dokuwiki
+      tags: ['dokuwiki']
 
 - hosts: node
   become: yes
