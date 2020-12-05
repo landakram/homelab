@@ -1,7 +1,13 @@
 ---
+- name: Create a temp dir for the cluster-monitoring repo
+  tempfile:
+    state: directory
+    suffix: monitoring
+  register: temp_dir
+
 - name: Check if cluster-monitoring repo already exists.
   stat:
-    path: /tmp/cluster-monitoring/vars.jsonnet
+    path: "{{ temp_dir.path + '/cluster-monitoring/vars.jsonnet' }}"
   delegate_to: localhost
   become: false
   register: vars_file_exists
@@ -11,23 +17,23 @@
     - name: Clone the cluster-monitoring project.
       git:
         repo: https://github.com/carlosedp/cluster-monitoring.git
-        dest: /tmp/cluster-monitoring
+        dest: "{{ temp_dir.path + '/cluster-monitoring' }}"
         version: "{{ cluster_monitoring_version }}"
         force: yes
 
     - name: Place our templated vars.jsonnet file.
       template:
         src: vars.jsonnet.j2
-        dest: /tmp/cluster-monitoring/vars.jsonnet
+        dest: "{{ temp_dir.path + '/cluster-monitoring/vars.jsonnet' }}"
 
     - name: Run 'vendor' cluster-monitoring target.
       make:
-        chdir: /tmp/cluster-monitoring
+        chdir: "{{ temp_dir.path + '/cluster-monitoring' }}"
         target: vendor
 
     - name: Run 'make' to generate all the K8s manifests.
       make:
-        chdir: /tmp/cluster-monitoring
+        chdir: "{{ temp_dir.path + '/cluster-monitoring' }}"
 
   when: >
     not vars_file_exists.stat.exists
@@ -37,7 +43,7 @@
 
 - name: Find all the manifests in the manifests/setup directory.
   find:
-    paths: /tmp/cluster-monitoring/manifests/setup
+    paths: "{{ temp_dir.path + '/cluster-monitoring/manifests/setup' }}"
     file_type: file
     patterns: '*.yaml,*.yml'
   delegate_to: localhost
@@ -56,7 +62,7 @@
 
 - name: Find all the manifests in the manifests directory.
   find:
-    paths: /tmp/cluster-monitoring/manifests
+    paths: "{{ temp_dir.path + '/cluster-monitoring/manifests' }}"
     file_type: file
     patterns: '*.yaml,*.yml'
   delegate_to: localhost
