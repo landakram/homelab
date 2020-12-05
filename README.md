@@ -13,7 +13,12 @@ A homelab running Kubernetes with [k3s](k3s.io/). Automated provisioning with [A
     * A `mark` user should be created in the `sudo` group. 
     * The `sudo` password should be the same as what is set in `keyring get ansible-sudo mark` on the ansible controller.
 2. Enable [SSH password authentication](https://serverpilot.io/docs/how-to-enable-ssh-password-authentication/)
-3. Note the IP address of the new host. This can be done with `nmap` if necessary. 
+3. Note the IP address of the new host. This can be done with `nmap` if necessary:
+
+```sh
+nmap -p 22  10.0.0.0/24
+```
+
 4. Add the new host's IP address to a group in `inventory/homelab/hosts.ini`. If adding a new k8s node (not a master), it should be added under the `[node]` section. Note that this file is not checked into version control.
 
 5. Install ansible dependencies:
@@ -22,10 +27,10 @@ A homelab running Kubernetes with [k3s](k3s.io/). Automated provisioning with [A
 ansible-galaxy install -r requirements.yml
 ```
 
-6. Bootstrap the node. Note that this will add an SSH key and disable SSH password authentication, making `-s` unnecessary in all subsequent calls:
+6. Bootstrap the node. Note that this will add an SSH key and disable SSH password authentication, making `-k` unnecessary in any subsequent call:
 
 ```sh
-ansible-playbook site.yml -i inventory/homelab/hosts.ini -e @credentials -s
+ansible-playbook site.yml -e @credentials -k
 ```
 
 ## Building a homelab from scratch
