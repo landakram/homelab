@@ -7,6 +7,9 @@
     - role: bootstrap
       tags: ['bootstrap']
 
+    - role: artis3n.tailscale
+      tags: ['tailscale']
+
     - role: prereq
       tags: ['k3s']
 
@@ -36,6 +39,8 @@
 
 - hosts: node
   become: yes
+  environment:
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
   roles:
     - role: k3s/node
       tags: ['k3s']
