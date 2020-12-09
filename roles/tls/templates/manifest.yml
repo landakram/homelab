@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-key
+  namespace: cert-manager
+type: Opaque
+stringData:
+  api-key: "{{ cloudflare_api_key }}"
+
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: "{{ letsencrypt_acme_email }}"
+    privateKeySecretRef:
+      name: letsencrypt-prod-private-key
+    solvers:
+    - dns01:
+        cloudflare:
+          email: "{{ cloudflare_email }}"
+          apiTokenSecretRef:
+            name: cloudflare-api-key
+            key: api-key

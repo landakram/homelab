@@ -44,6 +44,10 @@
 
     - role: dns
       tags: ['dns', 'setup']
+
+    - role: tls
+      tags: ['tls', 'setup']
+
     - role: monitoring
       tags: ['apps', 'monitoring']
 

@@ -24,7 +24,12 @@
       ingress:
         enabled: true
         hosts:
-          - name: "dokuwiki.{{ ingress_server_ip }}.nip.io"
+        - name: "wiki.homelab.markhudnall.com"
+          annotations:
+            cert-manager.io/cluster-issuer: "letsencrypt-prod"
+            cert-manager.io/acme-challenge-type: dns01
+          tls: true
+          tlsSecret: "wiki-homelab-markhudnall-com-tls"
       # I'm not actually sure if I need to set this, but I'm doing it
       # because I want to ensure that the pod's affinity is the same as
       # the persistent volume (provisioned by local-path) that backs it.
