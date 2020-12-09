@@ -1,0 +1,5 @@
+zone "homelab.markhudnall.com" {
+type master;
+notify no;
+file "/etc/bind/db.homelab.markhudnall.com";
+};

@@ -1,0 +1,94 @@
+---
+- name: Create a temp dir for the bind9 docker build
+  tags: ['dns:docker']
+  tempfile:
+    state: directory
+    suffix: dns
+  register: temp_dir
+  delegate_to: localhost
+  become: false
+
+- name: Create docker build directory
+  tags: ['dns:docker']
+  file:
+    path: "{{ temp_dir.path + '/docker' }}"
+    state: directory
+  delegate_to: localhost
+  become: false
+
+- name: Echo build directory
+  tags: ['dns:docker']
+  debug:
+    msg: "{{ temp_dir.path }}"
+
+- name: Create directories
+  tags: ['dns:docker']
+  file:
+    path: "{{ temp_dir.path + '/docker/' + item.path }}"
+    state: directory
+  with_filetree: templates/
+  when: item.state == 'directory'
+  delegate_to: localhost
+  become: false
+
+- name: Copy over files
+  tags: ['dns:docker']
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ temp_dir.path + '/docker/' + item.path }}"
+  with_filetree: "templates/"
+  when: item.state == 'file'
+  become: false
+  delegate_to: localhost
+
+- name: Build bind9 container image
+  docker_image:
+    name: "landakram/bind9:{{ docker_image_version }}"
+    build:
+      path: "{{ temp_dir.path + '/docker' }}"
+    source: build
+    state: present
+    force: yes
+  become: false
+  delegate_to: localhost
+
+- name: Archive image as gzipped tarball
+  shell: "docker save landakram/bind9:{{ docker_image_version }} | gzip > {{ temp_dir.path + '/bind9-' + docker_image_version + '.tar.gz' }}"
+  become: false
+  delegate_to: localhost
+
+# TODO: At this point, we should probably just run a private container registry.
+# I have to copy the image and import on _all_ cluster hosts and I have to copy
+# over the whole tar.gz without any benefits of layering.
+- name: Copy tarball to cluster hosts
+  copy:
+    src: "{{ temp_dir.path + '/bind9-' + docker_image_version + '.tar.gz' }}"
+    dest: "/tmp/bind9-{{ docker_image_version }}.tar.gz"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['k3s_cluster'] }}"
+
+- name: Uncompress tar
+  command: "gunzip -f /tmp/bind9-{{ docker_image_version }}.tar.gz"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['k3s_cluster'] }}"
+
+- name: Import image into k3s
+  tags: ['dns-build']
+  become: yes
+  command: "k3s ctr images import /tmp/bind9-{{ docker_image_version }}.tar"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['k3s_cluster'] }}"
+
+- name: Create dns namespace
+  tags: ['dns-build']
+  k8s:
+    name: dns
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Apply k8s manifests
+  tags: ['dns-build']
+  k8s:
+    definition: "{{ lookup('template', 'templates/pod.yml') }}"
+    state: present

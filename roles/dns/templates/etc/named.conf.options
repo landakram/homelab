@@ -1,0 +1,27 @@
+options {
+	directory "/var/cache/bind";
+
+	forwarders {
+          1.1.1.1; // CloudFlare
+          8.8.8.8; // Google
+	};
+
+	dnssec-validation auto;
+
+        auth-nxdomain no;    // conform to RFC1035
+	listen-on-v6 { any; };
+        
+        // Note: We allow recursion for any request against our better judgement for two reasons:
+        //
+        // 1. This DNS server is only used to serve tailscale IPs. The homelab is not publicly
+        //    accessible and therefore recursion can't be abused by outside clients.
+        // 2. Running this DNS server overrides the host's standard DNS since resolvectl sets
+        //    /etc/resolv.conf to a loopback address. So not allowing recursion caused external
+        //    DNS queries to fail when, for example, installing helm charts. I should probably
+        //    fix the conflict here, but it was easier to just allow recursion, given 1.
+        recursion yes;
+        allow-recursion { any; }; 
+
+        querylog yes; // Disable if you want, nice for debugging.
+        version "not available"; // Disable for security
+};

@@ -8,6 +8,8 @@ with pkgs; stdenv.mkDerivation {
     ansible
     sshpass
     kubectl
+    docker
+    python37Packages.docker
     python37Packages.keyring
   ];
 }

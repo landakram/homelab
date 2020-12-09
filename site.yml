@@ -19,6 +19,17 @@
     - role: raspberrypi
       tags: ['k3s']
 
+  tasks:
+    - name: Echo tailscale IP
+      tags: ['never', 'debug']
+      debug:
+        msg: "{{ tailscale_ip }}"
+
+    - name: Echo tailscale ingress server IP
+      tags: ['never', 'debug']
+      debug:
+        msg: "{{ tailscale_ingress_server_ip }}"
+
 - hosts: master
   become: yes
   environment:
@@ -31,6 +42,8 @@
     - role: setup
       tags: ['apps', 'setup']
 
+    - role: dns
+      tags: ['dns', 'setup']
     - role: monitoring
       tags: ['apps', 'monitoring']
 

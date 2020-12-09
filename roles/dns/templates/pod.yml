@@ -1,0 +1,64 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: bind
+  namespace: dns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bind
+  template:
+    metadata:
+      labels:
+        app: bind
+    spec:
+      containers:
+        - name: bind
+          image: landakram/bind9:{{ docker_image_version }}
+          imagePullPolicy: Never
+          env:
+            - name: WEBMIN_ENABLED
+              value: 'false'
+          ports:
+            - containerPort: 53
+              protocol: UDP
+          resources:
+            limits:
+              cpu: '2'
+              memory: '512Mi'
+            requests:
+              cpu: '500m'
+              memory: '256Mi'
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: bind
+  namespace: dns
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 53
+      targetPort: 53
+      protocol: UDP
+  selector:
+    app: bind
+
+---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: bind
+#   namespace: dns
+# spec:
+#   rules:
+#     - host: {{ tailscale_ingress_server_ip }}
+#       http:
+#         paths:
+#           - path: /
+#             backend:
+#               serviceName: bind
+#               servicePort: 53
