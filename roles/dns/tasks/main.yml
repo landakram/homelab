@@ -1,4 +1,17 @@
 ---
+# Public DNS for LAN
+- name: Create public DNS entries for LAN
+  tags: ['dns:public']
+  cloudflare_dns:
+    zone: "markhudnall.com"
+    record: "*.homelab"
+    type: A
+    value: "{{ ingress_server_ip }}"
+    account_email: "{{ cloudflare_email }}"
+    api_token: "{{ cloudflare_api_key }}"
+    state: present
+
+# Private DNS for Tailscale
 - name: Create a temp dir for the bind9 docker build
   tags: ['dns:docker']
   tempfile:

@@ -6,6 +6,7 @@ A homelab running Kubernetes with [k3s](k3s.io/). Automated provisioning with [A
 
 * Remote user is assumed to be `mark`.
 * Remote sudo password is retrieved from keychain on ansible controller. A single sudo password is assumed for all remote hosts.
+* DNS is assumed to be managed by CloudFlare nameservers. CloudFlare is used for public DNS entries (for internal, LAN IP addresses) and for dns-01 challenges for LetsEncrypt. 
 
 ## Provisioning a new machine
 
