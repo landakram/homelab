@@ -1,0 +1,44 @@
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: grafana-homelab-markhudnall-com
+  namespace: monitoring
+spec:
+  secretName: grafana-homelab-markhudnall-com-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: grafana.homelab.markhudnall.com
+  dnsNames:
+    - grafana.homelab.markhudnall.com
+    
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: prometheus-homelab-markhudnall-com
+  namespace: monitoring
+spec:
+  secretName: prometheus-homelab-markhudnall-com-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: prometheus.homelab.markhudnall.com
+  dnsNames:
+    - prometheus.homelab.markhudnall.com
+    
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: alertmanager-homelab-markhudnall-com
+  namespace: monitoring
+spec:
+  secretName: alertmanager-homelab-markhudnall-com-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: alertmanager.homelab.markhudnall.com
+  dnsNames:
+    - alertmanager.homelab.markhudnall.com

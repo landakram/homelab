@@ -45,10 +45,8 @@
     enabled: false,
     master_ip: ['{{ master_ip }}'],
   },
-
-  suffixDomain: '{{ ingress_server_ip }}.nip.io',
-  // If TLSingress is true, a self-signed HTTPS ingress with redirect will be created
-  TLSingress: false,
+  suffixDomain: 'homelab.markhudnall.com',
+  TLSingress: true,
   UseProvidedCerts: false,
   TLSCertificate: importstr 'unused.crt',
   TLSKey: importstr 'unused.key',

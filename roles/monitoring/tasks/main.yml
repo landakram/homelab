@@ -78,3 +78,15 @@
     definition: "{{ lookup('file', item) | from_yaml }}"
     state: present
   loop: "{{ cluster_monitoring_files.files | sort(attribute='path') | map(attribute='path') | list }}"
+
+- name: Apply LetsEncrypt cert manifests
+  tags: ['monitoring:tls']
+  k8s:
+    definition: "{{ lookup('template', 'templates/certs.yml') }}"
+    state: present
+
+- name: Patch monitoring ingresses to use LetsEncrypt certs
+  tags: ['monitoring:tls']
+  k8s:
+    definition: "{{ lookup('template', 'templates/ingresses.yml') }}"
+    state: present
