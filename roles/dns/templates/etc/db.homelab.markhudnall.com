@@ -9,8 +9,4 @@ $TTL 5m
 )
 
 @ IN NS dns.homelab.markhudnall.com.
-dns IN A {{ tailscale_ingress_server_ip }}
-wiki IN A {{ tailscale_ingress_server_ip }}
-grafana IN A {{ tailscale_ingress_server_ip }}
-prometheus IN A {{ tailscale_ingress_server_ip }}
-
+* IN A {{ tailscale_ingress_server_ip }}
