@@ -48,6 +48,9 @@
     - role: tls
       tags: ['tls', 'setup']
 
+    - role: longhorn
+      tags: ['longhorn', 'setup']
+
     - role: monitoring
       tags: ['apps', 'monitoring']
 
