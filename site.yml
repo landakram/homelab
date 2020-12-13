@@ -57,6 +57,9 @@
     - role: dokuwiki
       tags: ['apps', 'dokuwiki']
 
+    - role: gitea
+      tags: ['apps', 'gitea']
+
 - hosts: node
   become: yes
   environment:

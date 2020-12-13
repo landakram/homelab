@@ -1,0 +1,42 @@
+---
+- name: Create gitea namespace
+  k8s:
+    name: gitea
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add gitea chart repo
+  helm_repository:
+    name: novum-rgi
+    repo_url: https://novumrgi.github.io/helm/
+
+- name: Deploy Gitea
+  helm:
+    name: gitea
+    chart_ref: novum-rgi/gitea
+    release_namespace: gitea
+    state: present
+    values:
+      persistence:
+        enabled: true
+        storageClass: longhorn-r1
+      ingress:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          cert-manager.io/acme-challenge-type: dns01
+        hosts:
+          - gitea.homelab.markhudnall.com
+        tls:
+          - hosts:
+              - gitea.homelab.markhudnall.com
+            secretName: gitea-homelab-markhudnall-com-tls
+      gitea:
+        config:
+          server:
+            DISABLE_SSH: true
+        database:
+          builtIn:
+            postgresql:
+              enabled: true
