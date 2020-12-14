@@ -1,0 +1,40 @@
+---
+- name: Create openethereum namespace
+  k8s:
+    name: openethereum
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add eth-charts chart repo
+  helm_repository:
+    name: eth-charts
+    repo_url: https://landakram.github.io/eth-charts/
+
+- name: Deploy openethereum on a non-master node
+  helm:
+    name: openethereum
+    chart_ref: eth-charts/openethereum
+    release_namespace: openethereum
+    state: present
+    values:
+      persistence:
+        enabled: true
+        storageClass: longhorn-r1-nonmaster
+        size: 400Gi
+      podSecurityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      prometheus: true
+      config: |
+        [parity]
+        chain = "mainnet"
+        base_path = "/home/openethereum/.local/share/io.parity.ethereum"

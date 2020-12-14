@@ -60,6 +60,9 @@
     - role: gitea
       tags: ['apps', 'gitea']
 
+    - role: openethereum
+      tags: ['apps', 'openethereum']
+
 - hosts: node
   become: yes
   environment:
