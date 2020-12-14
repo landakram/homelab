@@ -13,13 +13,18 @@
 
 - name: Deploy cert-manager
   helm:
-    force: true
     name: cert-manager
     chart_ref: jetstack/cert-manager
     release_namespace: cert-manager
     state: present
     values:
       installCRDs: true
+      extraArgs:
+        # Tailscale may replace /etc/resolv.conf with the private nameserver
+        # deployed by the dns role. The private nameserver's SOA record may not
+        # be the same as public DNS, so force public DNS.
+        - --dns01-recursive-nameservers-only
+        - --dns01-recursive-nameservers=8.8.8.8:53
 
 - name: Create ClusterIssuer
   k8s:

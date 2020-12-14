@@ -9,6 +9,7 @@ with pkgs; stdenv.mkDerivation {
     sshpass
     kubectl
     docker
+    kail
     python37Packages.docker
     python37Packages.keyring
   ];
