@@ -46,6 +46,37 @@
         numberOfReplicas: "1"
         staleReplicaTimeout: "30"
 
+- name: Add nonmaster storage label to non-master nodes
+  tags: ['longhorn:r1-nonmaster']
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Node
+      metadata:
+        annotations:
+          node.longhorn.io/default-node-tags: '["nonmaster"]'
+        name: "{{ item }}"
+  loop: "{{ groups['node'] }}"
+
+- name: Create storage class for single replica on non-master node
+  tags: ['longhorn:r1-nonmaster']
+  k8s:
+    definition:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: longhorn-r1-nonmaster
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+      provisioner: driver.longhorn.io
+      allowVolumeExpansion: true
+      parameters:
+        baseImage: ""
+        fromBackup: ""
+        numberOfReplicas: "1"
+        staleReplicaTimeout: "30"
+        nodeSelector: "nonmaster"
+
 - name: Mark "longhorn" storage class as non-default
   k8s:
     definition:
