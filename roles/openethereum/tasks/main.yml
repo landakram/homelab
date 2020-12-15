@@ -38,3 +38,40 @@
         [parity]
         chain = "mainnet"
         base_path = "/home/openethereum/.local/share/io.parity.ethereum"
+
+        # The node is only accessible on LAN or VPN so...
+        [rpc]
+        interface = "all"
+
+        [websockets]
+        interface = "all"
+
+- name: Deploy an Ingress for openethereum
+  k8s:
+    definition:
+      apiVersion: extensions/v1beta1
+      kind: Ingress
+      metadata:
+        name: openethereum
+        namespace: openethereum
+        annotations:
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          cert-manager.io/acme-challenge-type: dns01
+      spec:
+        rules:
+          - host: eth.homelab.markhudnall.com
+            http:
+              paths:
+                - path: /
+                  backend:
+                    serviceName: openethereum
+                    servicePort: 8545
+                - path: /ws
+                  backend:
+                    serviceName: openethereum
+                    servicePort: 8546
+        tls:
+          - hosts:
+              - eth.homelab.markhudnall.com
+            secretName: eth-homelab-markhudnall-com-tls
+    state: present
