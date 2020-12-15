@@ -46,6 +46,10 @@
         [websockets]
         interface = "all"
 
+        [metrics]
+        enable = true
+        interface = "all"
+
 - name: Deploy an Ingress for openethereum
   k8s:
     definition:

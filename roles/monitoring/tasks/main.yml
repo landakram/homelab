@@ -26,6 +26,11 @@
         src: vars.jsonnet.j2
         dest: "{{ temp_dir.path + '/cluster-monitoring/vars.jsonnet' }}"
 
+    - name: Place our templated main.jsonnet file.
+      template:
+        src: main.jsonnet.j2
+        dest: "{{ temp_dir.path + '/cluster-monitoring/main.jsonnet' }}"
+
     - name: Run 'vendor' cluster-monitoring target.
       make:
         chdir: "{{ temp_dir.path + '/cluster-monitoring' }}"
