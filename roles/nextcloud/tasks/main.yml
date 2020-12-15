@@ -1,0 +1,37 @@
+---
+- name: Create nextcloud namespace
+  k8s:
+    name: nextcloud
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add nextcloud chart repo
+  helm_repository:
+    name: nextcloud
+    repo_url: https://nextcloud.github.io/helm/
+
+- name: Deploy nextcloud
+  helm:
+    name: nextcloud
+    chart_ref: nextcloud/nextcloud
+    release_namespace: nextcloud
+    values:
+      persistence:
+        enabled: true
+        storageClass: longhorn-r1
+        size: 50Gi
+      ingress:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          cert-manager.io/acme-challenge-type: dns01
+        tls:
+          - hosts:
+              - nextcloud.homelab.markhudnall.com
+            secretName: nextcloud-homelab-markhudnall-com-tls
+      nextcloud:
+        host: nextcloud.homelab.markhudnall.com
+        password: "{{ nextcloud_admin_password }}"
+      metrics:
+        enabed: true

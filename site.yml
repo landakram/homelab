@@ -63,6 +63,9 @@
     - role: openethereum
       tags: ['apps', 'openethereum']
 
+    - role: nextcloud
+      tags: ['apps', 'nextcloud']
+
 - hosts: node
   become: yes
   environment:
