@@ -21,7 +21,7 @@
       persistence:
         enabled: true
         storageClass: longhorn-r1-nonmaster
-        size: 400Gi
+        size: 600Gi
       podSecurityContext:
         runAsUser: 1000
         runAsGroup: 1000

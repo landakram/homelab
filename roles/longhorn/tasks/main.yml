@@ -21,12 +21,27 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['k3s_cluster'] }}"
 
+- name: Create high-priority PriorityClass
+  k8s:
+    definition:
+      apiVersion: scheduling.k8s.io/v1
+      kind: PriorityClass
+      metadata:
+        name: high-priority
+      value: 1000000
+      globalDefault: false
+      description: "This priority class should be used for critical pods that affect cluster operations like longhorn."
+    state: present
+
 - name: Deploy longhorn
   helm:
     name: longhorn
     chart_ref: longhorn/longhorn
     release_namespace: longhorn-system
     state: present
+    values:
+      defaultSettings:
+        priorityClass: high-priority
 
 - name: Create storage class for single replica
   tags: ['longhorn:r1']
