@@ -66,6 +66,9 @@
     - role: nextcloud
       tags: ['apps', 'nextcloud']
 
+    - role: eth2
+      tags: ['apps', 'eth2']
+
 - hosts: node
   become: yes
   environment:
@@ -73,3 +76,9 @@
   roles:
     - role: k3s/node
       tags: ['k3s']
+
+- hosts: remote
+  become: yes
+  roles:
+    - role: artis3n.tailscale
+      tags: ['tailscale']

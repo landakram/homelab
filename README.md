@@ -12,7 +12,7 @@ A homelab running Kubernetes with [k3s](k3s.io/). Automated provisioning with [A
 
 1. Install ubuntu server edition on the new machine. 
     * A `mark` user should be created in the `sudo` group. 
-    * The `sudo` password should be the same as what is set in `keyring get ansible-sudo mark` on the ansible controller.
+    * The `sudo` password should be the same as what is set in `keyring get ansible-sudo mark` on the ansible controller. A machine may also use a custom sudo password, in which case, the sudo password should be set to `keyring get <system-name> mark`.
 2. Enable [SSH password authentication](https://serverpilot.io/docs/how-to-enable-ssh-password-authentication/)
 3. Note the IP address of the new host. This can be done with `nmap` if necessary:
 
@@ -31,7 +31,7 @@ ansible-galaxy install -r requirements.yml
 6. Bootstrap the node. Note that this will add an SSH key and disable SSH password authentication, making `-k` unnecessary in any subsequent call:
 
 ```sh
-ansible-playbook site.yml -e @credentials -k
+ansible-playbook site.yml -k
 ```
 
 ## Building a homelab from scratch
@@ -46,6 +46,12 @@ So to create a cluster from scratch:
 
 ```sh
 keyring set ansible-sudo mark
+```
+
+For custom sudo passwords, set `keyring set <system-name> mark` and ensure that `ansible_become_pass` is set correctly in `host_vars/<system-name>.yml`, e.g.
+
+```yml
+ansible_become_pass: "{{ lookup('keyring', 'some-system-name mark') | d(omit) }}"
 ```
 
 4. Follow the instructions from [Provisioning a new machine](#provisioning-a-new-machine).

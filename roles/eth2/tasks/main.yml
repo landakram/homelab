@@ -1,0 +1,75 @@
+---
+- name: Create eth2 namespace
+  k8s:
+    name: eth2
+    api_version: v1
+    kind: Namespace
+    state: present
+
+# See: https://devops.college/prometheus-operator-how-to-monitor-an-external-service-3cb6ac8d5acb
+- name: Create endpoints for external service
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Endpoints
+      metadata:
+        name: lighthouse
+        namespace: eth2
+        labels:
+          app: lighthouse
+      subsets:
+        - addresses:
+            - ip: "{{ hostvars[lighthouse_host].tailscale_ip }}"
+          ports:
+            - name: bn-metrics
+              port: 5054
+              protocol: TCP
+            - name: vc-metrics
+              port: 5064
+              protocol: TCP
+    state: present
+
+- name: Create external service
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: lighthouse
+        namespace: eth2
+        labels:
+          app: lighthouse
+      spec:
+        clusterIP: ""
+        ports:
+          - name: bn-metrics
+            port: 5054
+            targetPort: 5054
+          - name: vc-metrics
+            port: 5064
+            targetPort: 5064
+    state: present
+
+- name: Create ServiceMonitor
+  tags: ['eth2:service-monitor']
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: ServiceMonitor
+      metadata:
+        name: lighthouse
+        namespace: eth2
+        labels:
+          app: lighthouse
+      spec:
+        endpoints:
+          - port: bn-metrics
+            scheme: http
+            interval: 5s
+          - port: vc-metrics
+            scheme: http
+            interval: 5s
+        selector:
+          matchLabels:
+            app: lighthouse
+    state: present
