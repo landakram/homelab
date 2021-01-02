@@ -21,6 +21,9 @@
         - addresses:
             - ip: "{{ hostvars[lighthouse_host].tailscale_ip }}"
           ports:
+            - name: bn-api
+              port: 5052
+              protocol: TCP
             - name: bn-metrics
               port: 5054
               protocol: TCP
@@ -40,8 +43,10 @@
         labels:
           app: lighthouse
       spec:
-        clusterIP: ""
         ports:
+          - name: bn-api
+            port: 5052
+            targetPort: 5052
           - name: bn-metrics
             port: 5054
             targetPort: 5054
@@ -72,4 +77,10 @@
         selector:
           matchLabels:
             app: lighthouse
+    state: present
+
+- name: Deploy eth2-prometheus-exporter
+  tags: ['eth2:prometheus-exporter']
+  k8s:
+    definition: "{{ lookup('template', 'templates/eth2-prometheus-exporter.yml') }}"
     state: present
