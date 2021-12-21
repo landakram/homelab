@@ -1,0 +1,24 @@
+# -*- mode: Conf;-*-
+# The eth2 beacon chain service (part of systemd)
+# file: /etc/systemd/system/beacon-chain.service
+
+[Unit]
+Description = eth2 beacon chain service
+Wants = network-online.target
+After = network-online.target
+
+[Service]
+User = lighthouse
+ExecStart = /usr/local/bin/lighthouse bn --staking \
+                                         --metrics \
+                                         --network mainnet \
+                                         --datadir {{ lighthouse_datadir }} \
+                                         --eth1-endpoints {{ lighthouse_eth1_endpoints }} \
+                                         --metrics-address {{ lighthouse_metrics_address }} \
+                                         --http-address {{ lighthouse_http_address }} \
+                                         --target-peers 70 \
+                                         --validator-monitor-auto
+Restart = on-failure
+
+[Install]
+WantedBy = multi-user.target

@@ -1,0 +1,20 @@
+# -*- mode: Conf;-*-
+# The eth2 validator service (part of systemd)
+# file: /etc/systemd/system/validator.service
+
+[Unit]
+Description     = eth2 validator service
+Wants           = network-online.target beacon-chain.service
+After           = network-online.target
+
+[Service]
+User            = lighthouse
+ExecStart       = /usr/local/bin/lighthouse vc --network mainnet \
+                                               --datadir {{ lighthouse_datadir }} \
+                                               --metrics \
+                                               --metrics-address {{ lighthouse_metrics_address }} \
+                                               --beacon-nodes {{ lighthouse_beacon_nodes }}
+Restart         = on-failure
+
+[Install]
+WantedBy    = multi-user.target

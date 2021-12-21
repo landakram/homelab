@@ -82,3 +82,9 @@
   roles:
     - role: artis3n.tailscale
       tags: ['tailscale']
+
+- hosts: lighthouse
+  become: yes
+  roles:
+    - role: lighthouse
+      tags: ['lighthouse']

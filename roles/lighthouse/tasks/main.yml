@@ -1,0 +1,196 @@
+---
+# Setup
+
+- name: Add ssh user
+  user:
+    name: "{{ secure_ssh_user }}"
+    groups:
+    - sudo
+    password: "{{ ansible_become_pass_sha256 }}"
+    shell: /bin/bash
+
+- name: "Harden SSH"
+  include_role:
+    name: vitalk.secure-ssh
+    apply:
+      become: yes
+  vars:
+    ssh_user: "{{ secure_ssh_user }}"
+    ssh_identity_key: "{{ lookup('env','HOME') + '/.ssh/id_ed25519.pub' }}"
+
+- name: Clean up any root SSH keys
+  become: yes
+  file:
+    state: absent
+    path: "/root/.ssh/authorized_keys"
+
+- name: "Update apt cache"
+  become: yes
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: "Upgrade apt packages"
+  become: yes
+  apt:
+    upgrade: safe
+
+- name: "Install required packages"
+  become: yes
+  package:
+    name:
+      - unattended-upgrades
+    state: present
+
+- name: Adjust APT update intervals
+  become: yes
+  copy:
+    src: files/apt_periodic
+    dest: /etc/apt/apt.conf.d/10periodic
+
+- name: Allow ssh traffic
+  tags: ['lighthouse:ufw']
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow tailscale traffic
+  tags: ['lighthouse:ufw']
+  ufw:
+    rule: allow
+    interface: tailscale0
+    direction: in
+    dest: "{{ tailscale_ip }}"
+    port: "{{ item }}"
+  loop:
+    - 5052
+    - 5054
+    - 5064
+
+- name: Allow timesyncd traffic
+  tags: ['lighthouse:ufw']
+  ufw:
+    rule: allow
+    interface: any
+    direction: out
+    port: 123
+
+- name: Allow lighthouse peer traffic
+  tags: ['lighthouse:ufw']
+  ufw:
+    rule: allow
+    interface: any
+    direction: in
+    port: 9000
+
+- name: Enable ufw
+  tags: ['lighthouse:ufw']
+  become: yes
+  ufw:
+    state: enabled
+
+- name: Enable timesyncd
+  become: yes
+  service:
+    name: systemd-timesyncd
+    state: started
+
+- name: Turn set-ntp on
+  become: yes
+  command: /usr/bin/timedatectl set-ntp on
+
+# Volume
+
+- name: Get the volume name
+  shell: ls /dev/disk/by-id/ | grep -v part
+  register: volume_name_raw
+
+- set_fact:
+    volume_name: "{{ volume_name_raw.stdout }}"
+
+- name: Mount volume read-write
+  mount:
+    path: /mnt/data
+    src: /dev/disk/by-id/{{ volume_name }}
+    fstype: ext4
+    opts: defaults,discard
+    state: mounted
+
+# Lighthouse
+- name: Add a service user
+  tags: ['lighthouse:lighthouse']
+  user:
+    name: lighthouse
+    password: "*"
+
+- name: Copy lighthouse gpg key
+  tags: ['lighthouse:lighthouse']
+  copy:
+    src: sigp.asc
+    dest: ~/sigp.asc
+
+- name: Import lighthouse gpg key
+  tags: ['lighthouse:lighthouse']
+  shell: "gpg --import ~/sigp.asc"
+
+- name: Download lighthouse binary
+  tags: ['lighthouse:lighthouse']
+  get_url:
+    url: "https://github.com/sigp/lighthouse/releases/download/{{ lighthouse_version }}/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: "~/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz"
+
+- name: Download gpg signature
+  tags: ['lighthouse:lighthouse']
+  get_url:
+    url: "https://github.com/sigp/lighthouse/releases/download/{{ lighthouse_version }}/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz.asc"
+    dest: "~/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz.asc"
+
+- name: Verify gpg signature
+  tags: ['lighthouse:lighthouse']
+  shell: "gpg --verify ~/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz.asc ~/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz"
+
+- name: Unarchive binary
+  tags: ['lighthouse:lighthouse']
+  unarchive:
+    src: "~/lighthouse-{{ lighthouse_version }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: "~/"
+    remote_src: yes
+    mode: +x
+
+- name: Test new binary
+  tags: ['lighthouse:lighthouse']
+  shell: ~/lighthouse --version
+
+- name: Move new binary into place
+  tags: ['lighthouse:lighthouse']
+  command: mv ~/lighthouse /usr/local/bin/lighthouse
+
+- name: Ensure datadir exists
+  tags: ['lighthouse:lighthouse']
+  file:
+    path: "{{ lighthouse_datadir }}"
+    state: directory
+    owner: lighthouse
+    group: lighthouse
+    mode: u+rw
+
+- name: Add beacon-chain systemd script
+  tags: ['lighthouse:lighthouse']
+  template:
+    src: beacon-chain.service
+    dest: /etc/systemd/system/beacon-chain.service
+
+- name: Add validator client systemd script
+  tags: ['lighthouse:lighthouse']
+  template:
+    src: validator.service
+    dest: /etc/systemd/system/validator.service
+
+- name: Start and enable beacon-chain
+  tags: ['lighthouse:lighthouse']
+  service:
+    name: beacon-chain.service
+    enabled: yes
+    state: started
+
+# Starting and enabling validator is left as a manual process
